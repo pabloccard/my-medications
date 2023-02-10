@@ -1,31 +1,31 @@
+import { useState, useContext } from 'react'
+import { SelectedDateContext } from '@/contexts/SelectedDateContext'
+import { day, weekDay, month, year, shortWeekDay } from '@/utils/formatter'
+import { getCurrentWeek } from '@/utils/getCurrentWeek'
 import {
   addDays,
   eachDayOfInterval,
   endOfWeek,
+  isSameDay,
+  isToday,
   startOfWeek,
   subDays,
-  format,
 } from 'date-fns'
-import ptBR from 'date-fns/locale/pt-BR'
+
 import { AnimatePresence } from 'framer-motion'
 import { CaretLeft, CaretRight } from 'phosphor-react'
-import { useState } from 'react'
 import {
   WeeklyCalendarContainer,
-  TodaysDate,
+  SelectedDate,
   Controls,
   WeekDaysContainer,
+  WeekDay,
 } from './styles'
-import { WeekDay } from './WeekDay'
 
 export const WeeklyCalendar = () => {
-  const [week, setWeek] = useState(() => {
-    const firstWeekDay = startOfWeek(new Date())
-    const lastWeekDay = endOfWeek(firstWeekDay)
-    return eachDayOfInterval({ start: firstWeekDay, end: lastWeekDay })
-  })
+  const [week, setWeek] = useState<Date[]>(getCurrentWeek())
 
-  const [date, setDate] = useState(new Date())
+  const { setSelectedDate, selectedDate } = useContext(SelectedDateContext)
 
   function setNextWeek() {
     setWeek((state) => {
@@ -33,6 +33,7 @@ export const WeeklyCalendar = () => {
       const lastWeekDay = endOfWeek(firstWeekDay)
       return eachDayOfInterval({ start: firstWeekDay, end: lastWeekDay })
     })
+    setSelectedDate(startOfWeek(addDays(selectedDate, 7)))
   }
 
   function setPreviousWeek() {
@@ -41,57 +42,56 @@ export const WeeklyCalendar = () => {
       const lastWeekDay = endOfWeek(firstWeekDay)
       return eachDayOfInterval({ start: firstWeekDay, end: lastWeekDay })
     })
+    setSelectedDate(startOfWeek(subDays(selectedDate, 7)))
   }
 
-  function resetAll() {
-    setDate(new Date())
-    setWeek(() => {
-      const firstWeekDay = startOfWeek(new Date())
-      const lastWeekDay = endOfWeek(firstWeekDay)
-      return eachDayOfInterval({ start: firstWeekDay, end: lastWeekDay })
-    })
+  function resetCalendar() {
+    setSelectedDate(new Date())
+    setWeek(getCurrentWeek())
   }
 
-  const weekDayName = format(date, 'eee', { locale: ptBR })
-  const monthDay = format(date, 'd', { locale: ptBR })
-  const month = format(date, 'MMMM', { locale: ptBR })
-  const year = format(date, 'yyyy', { locale: ptBR })
+  function handleSelectDate(date: Date) {
+    setSelectedDate(date)
+  }
 
   return (
     <AnimatePresence>
       <WeeklyCalendarContainer>
         <header>
-          <TodaysDate
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <strong>{monthDay}</strong>
+          <SelectedDate $isActive={isToday(selectedDate)}>
+            <strong>{day(selectedDate)}</strong>
             <div>
-              <span>{weekDayName}</span>
-              <span>
-                {month} | {year}
-              </span>
+              <span>{weekDay(selectedDate)}</span>
+              <span>{`${month(selectedDate)} | ${year(selectedDate)}`}</span>
             </div>
-          </TodaysDate>
+          </SelectedDate>
 
-          <Controls>
-            <button onClick={resetAll}>Hoje</button>
-            <div>
-              <button onClick={setPreviousWeek}>
-                <CaretLeft />
-              </button>
-              <button onClick={setNextWeek}>
-                <CaretRight />
-              </button>
-            </div>
+          <Controls isToday={isToday(selectedDate)}>
+            <button onClick={resetCalendar}>Hoje</button>
+            <button onClick={setPreviousWeek}>
+              <CaretLeft />
+            </button>
+            <button onClick={setNextWeek}>
+              <CaretRight />
+            </button>
           </Controls>
         </header>
 
         <WeekDaysContainer>
           {week.map((date) => (
-            <WeekDay key={String(date)} date={date} setDate={setDate} />
+            <WeekDay
+              key={String(date)}
+              $active={isSameDay(date, selectedDate)}
+              $isToday={isToday(date)}
+              onClick={() => handleSelectDate(date)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <span>{shortWeekDay(date)}</span>
+              <span>{day(date)}</span>
+            </WeekDay>
           ))}
         </WeekDaysContainer>
       </WeeklyCalendarContainer>

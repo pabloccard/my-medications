@@ -10,6 +10,11 @@ export const defaultTheme = {
   'gray-600': '#1A1A1A',
   'gray-700': '#0D0D0D',
 
+  fundo: '#1E1E20',
+  title: '#DFDFD7',
+  input: '#161618',
+  placeholder: 'rgba(235, 235, 245, .6)',
+
   purple: '#8284FA',
   'purple-dark': '#5E60CE',
 

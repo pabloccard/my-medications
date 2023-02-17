@@ -60,7 +60,7 @@ export const NumberInput = styled.div`
     line-height: 0;
 
     &:focus {
-      border: 1px solid ${(props) => props.theme['green-600']}; 
+      border: 1px solid ${(props) => props.theme['green-600']};
     }
   }
 

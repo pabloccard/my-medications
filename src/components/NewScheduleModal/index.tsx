@@ -8,12 +8,13 @@ import { z } from 'zod'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CaretLeft, CaretRight } from 'phosphor-react'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
+import { SchedulesContext } from '@/contexts/SchedulesContext'
 
 const newScheduleSchemaValidation = z.object({
-  medicationName: z.string(),
+  title: z.string(),
   durationInDays: z.number(),
-  interval: z.string(),
+  intervalInHours: z.string(),
   startTime: z.string(),
   startDate: z.string(),
 })
@@ -21,42 +22,31 @@ const newScheduleSchemaValidation = z.object({
 type FormData = z.infer<typeof newScheduleSchemaValidation>
 
 export const NewScheduleModal = () => {
-  const [duration, setDuration] = useState(1)
-  const [interval, setInterval] = useState(12)
+  const [duration, setDuration] = useState<number>(1)
 
-  const { register, handleSubmit, control } = useForm<FormData>({
+  const { createSchedule } = useContext(SchedulesContext)
+
+  const { register, handleSubmit, control, setValue } = useForm<FormData>({
     resolver: zodResolver(newScheduleSchemaValidation),
   })
 
   function onChangeDuration(action: 'increment' | 'decrement') {
-    switch (action) {
-      case 'increment':
-        duration === 7 ? setDuration(1) : setDuration((prev) => prev + 1)
-        break
-      case 'decrement':
-        duration === 1 ? setDuration(7) : setDuration((prev) => prev - 1)
-        break
-    }
-  }
+    const maxDuration = 14
+    const minDuration = 2
+    let newDuration = duration
 
-  function onChangeInterval(action: 'increment' | 'decrement') {
-    if (interval > 12) {
-      setInterval(4)
-      return
+    if (action === 'increment') {
+      newDuration = duration < maxDuration ? duration + 1 : minDuration
+    } else {
+      newDuration = duration > minDuration ? duration - 1 : maxDuration
     }
 
-    switch (action) {
-      case 'increment':
-        interval === 12 ? setInterval(4) : setInterval((prev) => prev + 2)
-        break
-      case 'decrement':
-        interval === 4 ? setInterval(12) : setInterval((prev) => prev - 2)
-        break
-    }
+    setDuration(newDuration)
+    setValue('durationInDays', newDuration)
   }
 
   function onSubmit(data: FormData) {
-    console.log(data)
+    createSchedule(data)
   }
 
   return (
@@ -64,7 +54,7 @@ export const NewScheduleModal = () => {
       <div>
         <label htmlFor="medicationName">Nome do medicamento</label>
         <input
-          {...register('medicationName')}
+          {...register('title')}
           type="text"
           id="medicationName"
           placeholder="Fenergan"
@@ -73,10 +63,10 @@ export const NewScheduleModal = () => {
 
       <div>
         <label htmlFor="duration">
-          Por quantos dias você deve tomar o medicamento?
+          Por quanto tempo você deve tomar a medicação?
         </label>
         <NumberInput>
-          <button onClick={() => onChangeDuration(`decrement`)}>
+          <button type="button" onClick={() => onChangeDuration(`decrement`)}>
             <CaretLeft />
           </button>
           <label htmlFor="">
@@ -85,13 +75,14 @@ export const NewScheduleModal = () => {
               type="number"
               id="duration"
               value={duration}
+              onChange={(e) => setDuration(Number(e.target.value))}
             />
             <span>
               {duration}
               {duration > 1 ? ' dias' : ' dia'}
             </span>
           </label>
-          <button onClick={() => onChangeDuration(`increment`)}>
+          <button type="button" onClick={() => onChangeDuration(`increment`)}>
             <CaretRight />
           </button>
         </NumberInput>
@@ -101,14 +92,14 @@ export const NewScheduleModal = () => {
         <label htmlFor="interval">Qual o intervalo de horas?</label>
         <Controller
           control={control}
-          name="interval"
+          name="intervalInHours"
           defaultValue=""
           rules={{ required: true }}
           render={({ field: { onChange, value } }) => (
             <RadioGroupRoot value={value} onValueChange={onChange}>
-              <RadioGroupItem value="8h">8h</RadioGroupItem>
-              <RadioGroupItem value="10h">10h</RadioGroupItem>
-              <RadioGroupItem value="12h">12h</RadioGroupItem>
+              <RadioGroupItem value="8">8h</RadioGroupItem>
+              <RadioGroupItem value="10">10h</RadioGroupItem>
+              <RadioGroupItem value="12">12h</RadioGroupItem>
             </RadioGroupRoot>
           )}
         />
@@ -116,14 +107,14 @@ export const NewScheduleModal = () => {
 
       <div>
         <label htmlFor="startTime">
-          Qual horário você irá começar a medicação?{' '}
+          Qual horário você irá começar a medicação?
         </label>
         <input {...register('startTime')} type="time" id="startTime" />
       </div>
 
       <div>
         <label htmlFor="startDate">
-          Que dia você irá começar tomar a medicação{' '}
+          Que dia você irá começar tomar a medicação
         </label>
         <input {...register('startDate')} type="date" id="startDate" />
       </div>

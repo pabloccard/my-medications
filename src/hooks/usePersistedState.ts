@@ -7,17 +7,20 @@ export const usePersistedState = <T>(
   initialState: T,
 ): Response<T> => {
   const [state, setState] = useState(() => {
-    const localStorageValue = localStorage.getItem(key)
+    if (typeof window !== 'undefined') {
+      const localStorageValue = localStorage.getItem(key)
 
-    if (localStorageValue) {
-      return JSON.parse(localStorageValue)
-    } else {
-      return initialState
+      if (localStorageValue) {
+        return JSON.parse(localStorageValue)
+      }
     }
+    return initialState
   })
 
   useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(state))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(key, JSON.stringify(state))
+    }
   }, [key, state])
 
   return [state, setState]

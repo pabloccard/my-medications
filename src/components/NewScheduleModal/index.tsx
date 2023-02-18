@@ -1,15 +1,11 @@
-import {
-  Container,
-  NumberInput,
-  RadioGroupItem,
-  RadioGroupRoot,
-} from './styles'
+import { Container, RadioGroupItem, RadioGroupRoot, Duration } from './styles'
 import { z } from 'zod'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CaretLeft, CaretRight } from 'phosphor-react'
-import { useContext, useState } from 'react'
+
+import { useContext } from 'react'
 import { SchedulesContext } from '@/contexts/SchedulesContext'
+import { DayStepper } from '../DayStepper'
 
 const newScheduleSchemaValidation = z.object({
   title: z.string(),
@@ -22,28 +18,11 @@ const newScheduleSchemaValidation = z.object({
 type FormData = z.infer<typeof newScheduleSchemaValidation>
 
 export const NewScheduleModal = () => {
-  const [duration, setDuration] = useState<number>(1)
-
   const { createSchedule } = useContext(SchedulesContext)
 
-  const { register, handleSubmit, control, setValue } = useForm<FormData>({
+  const { register, handleSubmit, control } = useForm<FormData>({
     resolver: zodResolver(newScheduleSchemaValidation),
   })
-
-  function onChangeDuration(action: 'increment' | 'decrement') {
-    const maxDuration = 14
-    const minDuration = 2
-    let newDuration = duration
-
-    if (action === 'increment') {
-      newDuration = duration < maxDuration ? duration + 1 : minDuration
-    } else {
-      newDuration = duration > minDuration ? duration - 1 : maxDuration
-    }
-
-    setDuration(newDuration)
-    setValue('durationInDays', newDuration)
-  }
 
   function onSubmit(data: FormData) {
     createSchedule(data)
@@ -52,7 +31,7 @@ export const NewScheduleModal = () => {
   return (
     <Container onSubmit={handleSubmit(onSubmit)}>
       <div>
-        <label htmlFor="medicationName">Nome do medicamento</label>
+        <label htmlFor="medicationName">Nome do medicamento?</label>
         <input
           {...register('title')}
           type="text"
@@ -62,30 +41,16 @@ export const NewScheduleModal = () => {
       </div>
 
       <div>
-        <label htmlFor="duration">
-          Por quanto tempo você deve tomar a medicação?
-        </label>
-        <NumberInput>
-          <button type="button" onClick={() => onChangeDuration(`decrement`)}>
-            <CaretLeft />
-          </button>
-          <label htmlFor="">
-            <input
-              {...register('durationInDays', { valueAsNumber: true })}
-              type="number"
-              id="duration"
-              value={duration}
-              onChange={(e) => setDuration(Number(e.target.value))}
-            />
-            <span>
-              {duration}
-              {duration > 1 ? ' dias' : ' dia'}
-            </span>
-          </label>
-          <button type="button" onClick={() => onChangeDuration(`increment`)}>
-            <CaretRight />
-          </button>
-        </NumberInput>
+        <label htmlFor="duration">Qual a duração do tratamento?</label>
+        <Controller
+          control={control}
+          name="durationInDays"
+          defaultValue={3}
+          rules={{ required: true }}
+          render={({ field: { onChange, value } }) => (
+            <DayStepper value={value} onValueChange={onChange} />
+          )}
+        />
       </div>
 
       <div>
@@ -106,17 +71,13 @@ export const NewScheduleModal = () => {
       </div>
 
       <div>
-        <label htmlFor="startTime">
-          Qual horário você irá começar a medicação?
-        </label>
-        <input {...register('startTime')} type="time" id="startTime" />
+        <label htmlFor="startDate">Qual a data de início do tratamento?</label>
+        <input {...register('startDate')} type="date" id="startDate" />
       </div>
 
       <div>
-        <label htmlFor="startDate">
-          Que dia você irá começar tomar a medicação
-        </label>
-        <input {...register('startDate')} type="date" id="startDate" />
+        <label htmlFor="startTime">Qual o horário da primeira dosagem?</label>
+        <input {...register('startTime')} type="time" id="startTime" />
       </div>
 
       <button type="submit">Criar Cronograma</button>

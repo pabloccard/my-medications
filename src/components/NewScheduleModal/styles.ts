@@ -5,7 +5,7 @@ export const Container = styled.form`
   width: 488px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 
   label {
     display: block;
@@ -19,10 +19,15 @@ export const Container = styled.form`
     border: 0;
     border-radius: 8px;
 
-    color: ${(props) => props.theme.placeholder};
+    color: ${(props) => props.theme['gray-100']};
+    cursor: pointer;
+    font-size: 1rem;
   }
+  input[type='time']::-webkit-calendar-picker-indicator,
   input[type='date']::-webkit-calendar-picker-indicator {
-    color: red;
+    filter: invert(23%) sepia(85%) saturate(5078%) hue-rotate(155deg)
+      brightness(99%) contrast(90%);
+    font-weight: bold;
   }
 
   button[type='submit'] {
